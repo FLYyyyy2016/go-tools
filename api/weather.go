@@ -12,11 +12,14 @@ import (
 )
 
 const (
-	myURL       = "http://hb9.api.yesapi.cn/"
-	serviceName = "App.Common_Weather.LiveWeather"
-	appKey      = "FDA8A4A24DD86227286B58D0F909EA29"
-	appSec      = "Og28qy5569N09bDURBjcd4zHT6Ck8pYvkgm6ZASG1IoFkvWPaHfA1yu1e5yQEiL6Wu"
+	myURL              = "http://hb9.api.yesapi.cn/"
+	appKey             = "FDA8A4A24DD86227286B58D0F909EA29"
+	WeatherServiceName = "App.Common_Weather.LiveWeather"
+	JokeServiceName="App.Common_Joke.RandOne"
+	appSec             = "Og28qy5569N09bDURBjcd4zHT6Ck8pYvkgm6ZASG1IoFkvWPaHfA1yu1e5yQEiL6Wu"
 )
+
+
 
 type Weather struct {
 	Date       string
@@ -55,12 +58,12 @@ type WeatherData struct {
 }
 
 func QueryByCity(city string) (Weather, error) {
-	queryUrl := appKey + city + serviceName
+	queryUrl := appKey + city + WeatherServiceName
 	sign, err := getSign(queryUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	queryUrl = myURL + "?" + "&app_key=" + appKey + "&service=" + serviceName + "&city=" + url.QueryEscape(city) + "&sign=" + sign
+	queryUrl = myURL + "?" + "&app_key=" + appKey + "&service=" + WeatherServiceName + "&city=" + url.QueryEscape(city) + "&sign=" + sign
 	log.Println(queryUrl, "request")
 	body := getRequest(queryUrl)
 	var weatherResponse WeatherResponse

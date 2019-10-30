@@ -22,7 +22,7 @@ func TestSing(t *testing.T) {
 }
 
 func TestQueryByCity(t *testing.T) {
-	weather, err := QueryByCity("jinan")
+	weather, err := QueryByCity("北京")
 	if err != nil {
 		log.Fatal(err)
 	}
