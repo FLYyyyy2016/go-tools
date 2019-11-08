@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 )
@@ -49,7 +50,7 @@ func QueryByCity(city string) (Weather, error) {
 		log.Fatal(err)
 	}
 	queryUrl = myURL + "?" + "&app_key=" + appKey + "&service=" + WeatherServiceName + "&city=" + url.QueryEscape(city) + "&sign=" + sign
-	log.Println(queryUrl, "request")
+	//log.Println(queryUrl, "request")
 	body := getRequest(queryUrl)
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(body, &weatherResponse)
@@ -60,4 +61,18 @@ func QueryByCity(city string) (Weather, error) {
 		return weatherResponse.Data.Weather, &getMessageError{weatherResponse.Return, weatherResponse.Message}
 	}
 	return weatherResponse.Data.Weather, err
+}
+
+func (w Weather) String() string {
+	return fmt.Sprintf(`
+
+时间：%s
+地点：%s
+天气状况：%s
+风向：%s
+风速：%d
+可视距离：%s
+
+
+`, w.Time, w.City, w.Weather, w.Win, w.WinSpeed, w.Visibility)
 }
