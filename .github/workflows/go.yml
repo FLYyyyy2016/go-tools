@@ -41,6 +41,11 @@ jobs:
     runs-on: [ubuntu-latest]
     name: Go test
     steps:
+      - name: Set up Go 1.13
+          uses: actions/setup-go@v1
+          with:
+            go-version: 1.13
+          id: go
       - name: test the api
         working-directory: ./api
         run: go test .
