@@ -37,6 +37,7 @@ jobs:
         MISSPELL: off
 
   Test:
+    needs: [build]
     runs-on: [ubuntu-latest]
     name: Go test
     steps:
