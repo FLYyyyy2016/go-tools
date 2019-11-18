@@ -16,9 +16,9 @@ func func2() {
 
 func TestSchedule(t *testing.T) {
 	sche := NewSchedule()
-	sche.Delay(4 * time.Second).Do(func1)
-	sche.Delay(2 * time.Second).Do(func2)
-	sche.Every(4 * time.Second).Do(func1)
-
+	job1 := sche.Delay(4 * time.Second).Do(func1)
+	job2 := sche.Delay(2 * time.Second).Do(func2)
+	job3 := sche.Every(4 * time.Second).Do(func1)
+	sche.stop
 	time.Sleep(20 * time.Second)
 }

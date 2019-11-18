@@ -34,8 +34,17 @@ func (sche *Schedule) Every(duration time.Duration) *EveryJob {
 	return &newJob
 }
 
+func (sche *Schedule) Cancel(jobId string) {
+	for _, task := range sche.Tasks {
+		if task.GetId() == jobId {
+			task.Cancel()
+		}
+	}
+}
+
 type Task interface {
-	Do(func())
+	Do(func()) string
+	GetId() string
 }
 
 type DelayJob struct {
@@ -54,16 +63,33 @@ type Job struct {
 	close chan struct{}
 }
 
-func (job *DelayJob) Do(f func()) {
+func (job *DelayJob) Cancel() {
+
+}
+
+func (job *EveryJob) Cancel() {
+
+}
+
+func (job *DelayJob) GetId() string {
+	return job.JobId
+}
+
+func (job *EveryJob) GetId() string {
+	return job.JobId
+}
+
+func (job *DelayJob) Do(f func()) string {
 	timer := time.NewTimer(job.duration)
 	//defer timer.Stop()
 	go func() {
 		<-timer.C
 		f()
 	}()
+	return job.JobId
 }
 
-func (job *EveryJob) Do(f func()) {
+func (job *EveryJob) Do(f func()) string {
 	timer := time.NewTicker(job.duration)
 	//defer timer.Stop()
 	go func() {
@@ -76,6 +102,7 @@ func (job *EveryJob) Do(f func()) {
 			}
 		}
 	}()
+	return job.JobId
 }
 
 func nextId() string {
