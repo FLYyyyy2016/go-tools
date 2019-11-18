@@ -41,5 +41,5 @@ jobs:
     name: Go test
     steps:
       - name: test the api
-        run: go test ./api/.
+        run: go test .
     
