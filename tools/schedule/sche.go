@@ -3,25 +3,24 @@ package schedule
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 type Schedule struct {
-	Tasks []Task
+	Tasks map[string]Task
 }
 
 func NewSchedule() *Schedule {
-	return &Schedule{Tasks: []Task{}}
+	return &Schedule{Tasks: make(map[string]Task)}
 }
 
 func (sche *Schedule) Delay(duration time.Duration) *DelayJob {
-
 	newJob := DelayJob{
 		Job:      Job{nextId(), nil, make(chan struct{})},
 		duration: duration,
 	}
-	sche.Tasks = append(sche.Tasks, &newJob)
+	sche.Tasks[newJob.JobId] = &newJob
 	return &newJob
 }
 
@@ -30,21 +29,18 @@ func (sche *Schedule) Every(duration time.Duration) *EveryJob {
 		Job:      Job{nextId(), nil, make(chan struct{})},
 		duration: duration,
 	}
-	sche.Tasks = append(sche.Tasks, &newJob)
+	sche.Tasks[newJob.JobId] = &newJob
 	return &newJob
 }
 
-func (sche *Schedule) Cancel(jobId string) {
-	for _, task := range sche.Tasks {
-		if task.GetId() == jobId {
-			task.Cancel()
-		}
-	}
+func (sche *Schedule) Cancel(jobId string) error {
+	return sche.Tasks[jobId].Cancel()
 }
 
 type Task interface {
 	Do(func()) string
 	GetId() string
+	Cancel() error
 }
 
 type DelayJob struct {
@@ -63,12 +59,14 @@ type Job struct {
 	close chan struct{}
 }
 
-func (job *DelayJob) Cancel() {
-
+func (job *DelayJob) Cancel() error {
+	job.close <- struct{}{}
+	return nil
 }
 
-func (job *EveryJob) Cancel() {
-
+func (job *EveryJob) Cancel() error {
+	job.close <- struct{}{}
+	return nil
 }
 
 func (job *DelayJob) GetId() string {
@@ -83,8 +81,14 @@ func (job *DelayJob) Do(f func()) string {
 	timer := time.NewTimer(job.duration)
 	//defer timer.Stop()
 	go func() {
-		<-timer.C
-		f()
+		select {
+		case <-timer.C:
+			f()
+		case <-job.close:
+			log.Debugln("job", job.JobId, "close")
+			timer.Stop()
+			return
+		}
 	}()
 	return job.JobId
 }
@@ -98,6 +102,8 @@ func (job *EveryJob) Do(f func()) string {
 			case <-timer.C:
 				f()
 			case <-job.close:
+				log.Debugln("job", job.JobId, "close")
+				timer.Stop()
 				return
 			}
 		}
