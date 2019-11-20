@@ -1,29 +1,97 @@
 package schedule
 
 import (
+	"github.com/go-playground/assert/v2"
 	log "github.com/sirupsen/logrus"
+	"sync"
 	"testing"
 	"time"
 )
 
-func func1() {
-	log.Println("hello world")
-}
-
-func func2() {
-	log.Println("你好，世界")
-}
-
 func TestSchedule(t *testing.T) {
-	log.SetLevel(log.DebugLevel)
-	sche := NewSchedule()
-	job1 := sche.Delay(1 * time.Second).Do(func1)
-	job2 := sche.Delay(4 * time.Second).Do(func2)
-	job3 := sche.Every(1 * time.Second).Do(func1)
-	time.Sleep(5 * time.Second)
-	sche.Cancel(job2)
-	sche.Cancel(job3)
-	sche.Cancel(job1)
 
-	time.Sleep(20 * time.Second)
+}
+
+func TestSchedule_Delay(t *testing.T) {
+	sche := NewSchedule()
+	lock := sync.Mutex{}
+	i := 0
+
+	f := func() {
+		lock.Lock()
+		defer lock.Unlock()
+		i = i + 1
+	}
+
+	for i := 0; i < 100; i++ {
+		sche.Delay(time.Duration(time.Duration(1000+i*10) * time.Millisecond)).Do(f)
+	}
+	time.Sleep(3 * time.Second)
+	assert.Equal(t, i, 100)
+}
+
+func TestSchedule_Every(t *testing.T) {
+	sche := NewSchedule()
+	lock := sync.Mutex{}
+	i := 0
+
+	f := func() {
+		lock.Lock()
+		defer lock.Unlock()
+		i = i + 1
+	}
+	sche.Every(100 * time.Millisecond).Do(f)
+	time.Sleep(4550 * time.Millisecond)
+	assert.Equal(t, i, 45)
+}
+
+func TestDelayJob_Cancel(t *testing.T) {
+	delays := []string{}
+	sche := NewSchedule()
+	lock := sync.Mutex{}
+	i := 0
+	temp := 0
+	f := func() {
+		lock.Lock()
+		defer lock.Unlock()
+		i = i + 1
+	}
+	for i := 0; i < 100; i++ {
+		jobid := sche.Delay(time.Duration(time.Duration(1000+i*10) * time.Millisecond)).Do(f)
+		delays = append(delays, jobid)
+	}
+	time.Sleep(1500 * time.Millisecond)
+	for _, delay := range delays {
+		err := sche.Cancel(delay)
+		if err != nil {
+			temp++
+		}
+	}
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, temp, i)
+}
+
+func TestEveryJob_Cancel(t *testing.T) {
+	everys := []string{}
+	sche := NewSchedule()
+	lock := sync.Mutex{}
+	i := 0
+	temp := 0
+	f := func() {
+		lock.Lock()
+		defer lock.Unlock()
+		i = i + 1
+	}
+	for i := 0; i < 10; i++ {
+		jobid := sche.Every(100 * time.Millisecond).Do(f)
+		everys = append(everys, jobid)
+	}
+	time.Sleep(1510 * time.Millisecond)
+	for _, every := range everys {
+		err := sche.Cancel(every)
+		if err != nil {
+			temp++
+		}
+	}
+	log.Println(i)
 }
