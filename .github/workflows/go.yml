@@ -52,4 +52,8 @@ jobs:
       - name: test the api
         working-directory: ./api
         run: go test .
+
+      - name: test the schedule
+        working-directory: ./tools/schedule
+        run: go test .
     
