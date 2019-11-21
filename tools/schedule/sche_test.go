@@ -2,7 +2,6 @@ package schedule
 
 import (
 	"github.com/go-playground/assert/v2"
-	log "github.com/sirupsen/logrus"
 	"sync"
 	"testing"
 	"time"
@@ -20,6 +19,7 @@ func TestSchedule_Delay(t *testing.T) {
 	f := func() {
 		lock.Lock()
 		defer lock.Unlock()
+		time.Sleep(1 * time.Millisecond)
 		i = i + 1
 	}
 
@@ -38,6 +38,7 @@ func TestSchedule_Every(t *testing.T) {
 	f := func() {
 		lock.Lock()
 		defer lock.Unlock()
+		time.Sleep(1 * time.Millisecond)
 		i = i + 1
 	}
 	sche.Every(100 * time.Millisecond).Do(f)
@@ -54,6 +55,7 @@ func TestDelayJob_Cancel(t *testing.T) {
 	f := func() {
 		lock.Lock()
 		defer lock.Unlock()
+		//time.Sleep(1*time.Millisecond)
 		i = i + 1
 	}
 	for i := 0; i < 100; i++ {
@@ -76,10 +78,10 @@ func TestEveryJob_Cancel(t *testing.T) {
 	sche := NewSchedule()
 	lock := sync.Mutex{}
 	i := 0
-	temp := 0
 	f := func() {
 		lock.Lock()
 		defer lock.Unlock()
+		time.Sleep(1 * time.Millisecond)
 		i = i + 1
 	}
 	for i := 0; i < 10; i++ {
@@ -90,8 +92,9 @@ func TestEveryJob_Cancel(t *testing.T) {
 	for _, every := range everys {
 		err := sche.Cancel(every)
 		if err != nil {
-			temp++
+			t.Log(err)
 		}
 	}
-	log.Println(i)
+	time.Sleep(1 * time.Second)
+	assert.Equal(t, i, 150)
 }

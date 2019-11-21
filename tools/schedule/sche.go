@@ -18,7 +18,12 @@ const (
 )
 
 type Schedule struct {
-	Tasks map[string]Task
+	tasks map[string]Task
+}
+
+type JobStats struct {
+	jobStatus    jobStatus
+	finishedTime int
 }
 
 type jobStatus uint
@@ -54,7 +59,7 @@ func (error jobNotExistError) Error() string {
 }
 
 func NewSchedule() *Schedule {
-	return &Schedule{Tasks: make(map[string]Task)}
+	return &Schedule{tasks: make(map[string]Task)}
 }
 
 func (sche *Schedule) Delay(duration time.Duration) *DelayJob {
@@ -62,8 +67,8 @@ func (sche *Schedule) Delay(duration time.Duration) *DelayJob {
 		Job:      Job{JobId: nextId(), close: make(chan struct{})},
 		duration: duration,
 	}
-	newJob.status = jobCreating
-	sche.Tasks[newJob.JobId] = &newJob
+	newJob.setStatus(jobCreating)
+	sche.tasks[newJob.JobId] = &newJob
 	return &newJob
 }
 
@@ -72,13 +77,17 @@ func (sche *Schedule) Every(duration time.Duration) *EveryJob {
 		Job:      Job{JobId: nextId(), close: make(chan struct{})},
 		duration: duration,
 	}
-	newJob.status = jobCreating
-	sche.Tasks[newJob.JobId] = &newJob
+	newJob.setStatus(jobCreating)
+	sche.tasks[newJob.JobId] = &newJob
 	return &newJob
 }
 
 func (sche *Schedule) Cancel(jobId string) error {
-	return sche.Tasks[jobId].Cancel()
+	if task, ok := sche.tasks[jobId]; ok {
+		return task.Cancel()
+	} else {
+		return jobNotExistError{}
+	}
 }
 
 type Task interface {
@@ -90,25 +99,29 @@ type Task interface {
 type DelayJob struct {
 	Job
 	duration time.Duration
+	finish   chan struct{}
 }
 
 type EveryJob struct {
 	Job
 	duration time.Duration
+	finish   chan int
 }
 
 type Job struct {
 	sync.Mutex
-	JobId  string
-	status jobStatus
-	work   func()
-	close  chan struct{}
+	JobId    string
+	status   jobStatus
+	work     func()
+	close    chan struct{}
+	jobStats JobStats
 }
 
 func (job *Job) setStatus(status jobStatus) {
 	job.Lock()
 	defer job.Unlock()
 	job.status = status
+	job.jobStats.jobStatus = status
 }
 func (job *Job) getStatus() jobStatus {
 	job.Lock()
@@ -121,7 +134,7 @@ func (job *DelayJob) Cancel() error {
 	if status == jobPrepare {
 		job.close <- struct{}{}
 	} else if status == jobRunning {
-		return jobIsRunningError{}
+		job.close <- struct{}{}
 	} else if status == jobCancel {
 		return jobIsCancelError{}
 	} else if status == jobCreating {
@@ -137,7 +150,7 @@ func (job *EveryJob) Cancel() error {
 	if status == jobPrepare {
 		job.close <- struct{}{}
 	} else if status == jobRunning {
-		return jobIsRunningError{}
+		job.close <- struct{}{}
 	} else if status == jobCancel {
 		return jobIsCancelError{}
 	} else if status == jobCreating {
@@ -162,9 +175,16 @@ func (job *DelayJob) Do(f func()) string {
 		job.setStatus(jobPrepare)
 		select {
 		case <-timer.C:
-			job.setStatus(jobRunning)
-			f()
-			job.setStatus(jobFinish)
+			if job.getStatus() == jobPrepare {
+				go func() {
+					job.setStatus(jobRunning)
+					f()
+					job.finishOneTime()
+					if job.getStatus() == jobRunning {
+						job.setStatus(jobFinish)
+					}
+				}()
+			}
 		case <-job.close:
 			log.Debugln("job", job.JobId, "close")
 			timer.Stop()
@@ -175,6 +195,10 @@ func (job *DelayJob) Do(f func()) string {
 	return job.JobId
 }
 
+func (job *Job) finishOneTime() {
+	job.jobStats.finishedTime++
+}
+
 func (job *EveryJob) Do(f func()) string {
 	timer := time.NewTicker(job.duration)
 	go func() {
@@ -182,9 +206,15 @@ func (job *EveryJob) Do(f func()) string {
 		for {
 			select {
 			case <-timer.C:
-				job.setStatus(jobRunning)
-				f()
-				job.setStatus(jobPrepare)
+				if job.getStatus() == jobPrepare {
+					go func() {
+						job.setStatus(jobRunning)
+						f()
+						if job.getStatus() == jobRunning {
+							job.setStatus(jobPrepare)
+						}
+					}()
+				}
 			case <-job.close:
 				log.Debugln("job", job.JobId, "close")
 				timer.Stop()
