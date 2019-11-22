@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: go1.13 linter
-        uses: shoukoo/golang-pipeline/go1.12/linter@master
+        uses: shoukoo/golang-pipeline/go1.13/linter@master
         with:
           GOLINT: on
           MISSPELL: off
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v1
         with:
-          go-version: 1.12
+          go-version: 1.13
 
       - name: Check out code
         uses: actions/checkout@v1
