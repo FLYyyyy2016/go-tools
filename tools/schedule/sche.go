@@ -14,7 +14,7 @@ const (
 	jobFinish
 	jobCreating
 	jobCancel
-	jobNotExist
+	//jobNotExist
 )
 
 type Schedule struct {
@@ -28,11 +28,11 @@ type JobStats struct {
 
 type jobStatus uint
 
-type jobIsRunningError struct{}
-
-func (error jobIsRunningError) Error() string {
-	return "job is running ,you can try it again"
-}
+//type jobIsRunningError struct{}
+//
+//func (error jobIsRunningError) Error() string {
+//	return "job is running ,you can try it again"
+//}
 
 type jobIsCreatingError struct{}
 
@@ -99,20 +99,20 @@ type Task interface {
 type DelayJob struct {
 	Job
 	duration time.Duration
-	finish   chan struct{}
+	//finish   chan struct{}
 }
 
 type EveryJob struct {
 	Job
 	duration time.Duration
-	finish   chan int
+	//finish   chan int
 }
 
 type Job struct {
 	sync.Mutex
-	JobId    string
-	status   jobStatus
-	work     func()
+	JobId  string
+	status jobStatus
+	//work     func()
 	close    chan struct{}
 	jobStats JobStats
 }
@@ -233,7 +233,7 @@ func nextId() string {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	m.Write(timeBytes)
+	_, _ = m.Write(timeBytes)
 	bs := m.Sum(nil)
 	return hex.EncodeToString(bs)
 }

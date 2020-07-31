@@ -34,7 +34,7 @@ func getRequest(url string) []byte {
 func getSign(s string) (string, error) {
 	s += appSec
 	gen := md5.New()
-	gen.Write([]byte(s))
+	_, _ = gen.Write([]byte(s))
 	bs := gen.Sum(nil)
 	str := fmt.Sprintf("%x", bs)
 	if len(bs) != 16 {

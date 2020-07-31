@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/FLYyyyy2016/goTools/api"
-	"github.com/urfave/cli"
 	"log"
 	"os"
+
+	"github.com/FLYyyyy2016/goTools/api"
+	"github.com/urfave/cli"
 )
 
 func main() {
@@ -19,5 +20,5 @@ func main() {
 		}
 		fmt.Println(weather)
 	}
-	app.Run(os.Args)
+	_ = app.Run(os.Args)
 }

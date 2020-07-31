@@ -1,18 +1,15 @@
 package schedule
 
 import (
-	"github.com/go-playground/assert/v2"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/go-playground/assert/v2"
 )
 
-func TestSchedule(t *testing.T) {
-
-}
-
 func TestSchedule_Delay(t *testing.T) {
-	sche := NewSchedule()
+	schedule := NewSchedule()
 	lock := sync.Mutex{}
 	i := 0
 
@@ -24,14 +21,14 @@ func TestSchedule_Delay(t *testing.T) {
 	}
 
 	for i := 0; i < 100; i++ {
-		sche.Delay(time.Duration(time.Duration(1000+i*10) * time.Millisecond)).Do(f)
+		schedule.Delay(time.Duration(1000+i*10) * time.Millisecond).Do(f)
 	}
 	time.Sleep(3 * time.Second)
 	assert.Equal(t, i, 100)
 }
 
 func TestSchedule_Every(t *testing.T) {
-	sche := NewSchedule()
+	schedule := NewSchedule()
 	lock := sync.Mutex{}
 	i := 0
 
@@ -41,14 +38,14 @@ func TestSchedule_Every(t *testing.T) {
 		time.Sleep(1 * time.Millisecond)
 		i = i + 1
 	}
-	sche.Every(100 * time.Millisecond).Do(f)
+	schedule.Every(100 * time.Millisecond).Do(f)
 	time.Sleep(4550 * time.Millisecond)
 	assert.Equal(t, i, 45)
 }
 
 func TestDelayJob_Cancel(t *testing.T) {
-	delays := []string{}
-	sche := NewSchedule()
+	var delays []string
+	schedule := NewSchedule()
 	lock := sync.Mutex{}
 	i := 0
 	temp := 0
@@ -59,12 +56,12 @@ func TestDelayJob_Cancel(t *testing.T) {
 		i = i + 1
 	}
 	for i := 0; i < 100; i++ {
-		jobid := sche.Delay(time.Duration(time.Duration(1000+i*10) * time.Millisecond)).Do(f)
-		delays = append(delays, jobid)
+		jobID := schedule.Delay(time.Duration(1000+i*10) * time.Millisecond).Do(f)
+		delays = append(delays, jobID)
 	}
 	time.Sleep(1500 * time.Millisecond)
 	for _, delay := range delays {
-		err := sche.Cancel(delay)
+		err := schedule.Cancel(delay)
 		if err != nil {
 			temp++
 		}
@@ -74,8 +71,8 @@ func TestDelayJob_Cancel(t *testing.T) {
 }
 
 func TestEveryJob_Cancel(t *testing.T) {
-	everys := []string{}
-	sche := NewSchedule()
+	var everyStrings []string
+	schedule := NewSchedule()
 	lock := sync.Mutex{}
 	i := 0
 	f := func() {
@@ -85,12 +82,12 @@ func TestEveryJob_Cancel(t *testing.T) {
 		i = i + 1
 	}
 	for i := 0; i < 10; i++ {
-		jobid := sche.Every(100 * time.Millisecond).Do(f)
-		everys = append(everys, jobid)
+		jobID := schedule.Every(100 * time.Millisecond).Do(f)
+		everyStrings = append(everyStrings, jobID)
 	}
 	time.Sleep(1510 * time.Millisecond)
-	for _, every := range everys {
-		err := sche.Cancel(every)
+	for _, every := range everyStrings {
+		err := schedule.Cancel(every)
 		if err != nil {
 			t.Log(err)
 		}
