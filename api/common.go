@@ -14,9 +14,10 @@ const (
 	appKey = "FDA8A4A24DD86227286B58D0F909EA29"
 	appSec = "Og28qy5569N09bDURBjcd4zHT6Ck8pYvkgm6ZASG1IoFkvWPaHfA1yu1e5yQEiL6Wu"
 
-	WeatherServiceName = "App.Common_Weather.LiveWeather"
-	JokeServiceName    = "App.Common_Joke.RandOne"
-	IDCardServiceName  = "App.Common_IDCard.Parse"
+	WeatherServiceName     = "App.Common_Weather.LiveWeather"
+	JokeServiceName        = "App.Common_Joke.RandOne"
+	IDCardServiceName      = "App.Common_IDCard.Parse"
+	GetIPStatusServiceName = "Ext.IP.GetInfo"
 )
 
 func getRequest(url string) []byte {

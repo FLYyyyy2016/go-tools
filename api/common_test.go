@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
+	"strconv"
 	"testing"
 )
 
@@ -24,7 +25,7 @@ func TestSign(t *testing.T) {
 
 func TestNumberToAscii(t *testing.T) {
 	i := 5
-	s := string(i)
+	s := strconv.Itoa(i)
 	u := url.QueryEscape(s)
 	log.Println(i, s, u)
 	log.Printf("%d", i)

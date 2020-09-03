@@ -65,14 +65,11 @@ func QueryByCity(city string) (Weather, error) {
 
 func (w Weather) String() string {
 	return fmt.Sprintf(`
-
 时间：%s
 地点：%s
 天气状况：%s
 风向：%s
 风速：%d
 可视距离：%s
-
-
 `, w.Time, w.City, w.Weather, w.Win, w.WinSpeed, w.Visibility)
 }

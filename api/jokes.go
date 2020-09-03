@@ -6,26 +6,25 @@ import (
 	"log"
 )
 
-
 type JokeResponse struct {
-	Return  int         `json:"ret"`
+	Return  int      `json:"ret"`
 	Data    JokeData `json:"data"`
-	Message string      `json:"msg"`
+	Message string   `json:"msg"`
 }
 type JokeData struct {
 	ErrCode int    `json:"err_code"`
 	ErrMsg  string `json:"err_msg"`
-	Joke [][]string
+	Joke    [][]string
 }
 
 func GetJokes(num int) ([][]string, error) {
-	queryUrl := appKey + fmt.Sprint(num)+ JokeServiceName
+	queryUrl := appKey + fmt.Sprint(num) + JokeServiceName
 	sign, err := getSign(queryUrl)
 	if err != nil {
 		log.Fatal(err)
 	}
-	queryUrl = myURL + "?" + "&app_key=" + appKey + "&service=" + JokeServiceName + "&num=" +fmt.Sprint(num)+ "&sign=" + sign
-	log.Println(queryUrl, "request")
+	queryUrl = myURL + "?" + "&app_key=" + appKey + "&service=" + JokeServiceName + "&num=" + fmt.Sprint(num) + "&sign=" + sign
+	//log.Println(queryUrl, "request")
 	body := getRequest(queryUrl)
 	var jokeResponse JokeResponse
 	err = json.Unmarshal(body, &jokeResponse)
